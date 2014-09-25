@@ -1,0 +1,25 @@
+{
+  "name": "kwest",
+  "version": "0.0.1",
+  "description": "Simplified request library with promises",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "request"
+  ],
+  "author": "Jan Potoms",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^2.3.2",
+    "extend": "^1.3.0",
+    "fast-url-parser": "^1.0.6-0",
+    "request": "^2.44.0"
+  },
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "express": "^4.9.5",
+    "mocha": "^1.21.4"
+  }
+}
