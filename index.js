@@ -25,6 +25,7 @@ function normalizeOptions(options) {
   }
 
   options.headers = options.headers || {};
+  options.encoding = 'binary';
 
   return options;
 }
