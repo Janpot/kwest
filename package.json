@@ -1,6 +1,6 @@
 {
   "name": "kwest",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Simplified request library with promises",
   "main": "index.js",
   "scripts": {
@@ -22,8 +22,8 @@
     "express": "^4.9.5",
     "mocha": "^1.21.4"
   },
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/Janpot/kwest.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Janpot/kwest.git"
   }
 }
