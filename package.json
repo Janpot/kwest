@@ -1,6 +1,6 @@
 {
   "name": "kwest",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Simplified request library with promises",
   "main": "index.js",
   "scripts": {
