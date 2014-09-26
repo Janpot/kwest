@@ -1,4 +1,4 @@
-# kwest
+# kwest [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
 
 Replacement for the excelent request library. aims to be more modular and extensible.
 
@@ -56,3 +56,10 @@ kwest.get(url)
     // Can have gzipped responses now
   })
 ```
+
+
+[travis-url]: http://travis-ci.org/Janpot/kwest
+[travis-image]: http://img.shields.io/travis/Janpot/kwest.svg?style=flat
+
+[depstat-url]: https://david-dm.org/Janpot/kwest
+[depstat-image]: http://img.shields.io/david/Janpot/kwest.svg?style=flat
