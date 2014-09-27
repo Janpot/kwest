@@ -1,6 +1,6 @@
 # kwest [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
 
-express for client side requests. Uses a middleware-like strategy to build up a http request method taylored to your specific needs.
+express for client side requests. Uses a middleware-like strategy to build up a http request method tailored to your specific needs.
 
 ## Installation
 
@@ -36,6 +36,7 @@ request.use(function rejectBadStatus(req, next) {
   return next(req)
     .then(function (res) {
       if (res.statusCode !== 200) throw new Error('Bad status');
+      return res;
     });
 });
 
@@ -67,7 +68,7 @@ request(url)
 
 ### var request = kwest([function])
 
-Creates a request function that can make the most basic http requests. Optionally an argument can be provided that represents the last request in the middleware chain. This useful for e.g. mocking, browserify,...
+Creates a request function that can make the most basic http requests. Optionally an argument can be provided that represents the last request in the middleware chain. This is useful for e.g. mocking, browserify,...
 `request` can be called either with a string or with an options object to make the actual request. available options are:
 - `uri`: string or parsed url. This is mandatory
 - `method`: cdefaults to `GET`
