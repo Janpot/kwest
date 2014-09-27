@@ -1,93 +1,50 @@
 'use strict';
 
-var Promise  = require('bluebird'),
-    _request = require('request'),
-    urlUtil  = require('fast-url-parser'),
-    extend   = require('extend');
+var base     = require('kwest-base'),
+    defaults = require('merge-defaults');
 
-function merge(obj1, obj2) {
-  // the resulting object will have all (deep) properties of obj1 and obj2
-  // obj2 has precendence over obj1
-  return extend(true, {}, obj1, obj2);
-}
+function init(initial) {
 
-function isParsedUrl(url) {
-  return url.protocol && (url.host || url.hostname);
-}
+  var baseKwest = base(initial);
 
-function normalizeOptions(options) {
-  if (typeof options === 'string') {
-    options = {
-      uri: urlUtil.parse(options)
-    };
-  } else if (typeof options.uri === 'string') {
-    options.uri = urlUtil.parse(options.uri);
+  function kwest(request) {
+    return baseKwest(request);
   }
 
-  options.headers = options.headers || {};
-  options.encoding = 'binary';
+  function fork() {
+    return init(baseKwest);
+  }
 
-  return options;
-}
-
-
-var jar    = _request.jar.bind(_request),
-    cookie = _request.cookie.bind(_request);
-
-
-function init(makeRequest) {
-
-  function request(options) {
-    var optionsObj = normalizeOptions(options);
-    return makeRequest(optionsObj);
+  function use(middleware) {
+    baseKwest.use(middleware);
+    return kwest;
   }
 
   function makeMethod(method) {
-    var methodOptions = { method: method };
     return function (options) {
-      var optionsObj     = normalizeOptions(options),
-          requestOptions = merge(methodOptions, optionsObj);
-      return request(requestOptions);
+      options.method = method;
+      return baseKwest(options);
     };
   }
 
-  function wrap(middleware) {
-    var newMakeRequest = function (options) {
-      return middleware(makeRequest, options);
-    };
-    return init(newMakeRequest);
-  }
-
-  function makeDefaults(defaults) {
-    return wrap(function (makeRequest, options) {
-      var defaultedOptions = merge(defaults, options);
-      return makeRequest(defaultedOptions);
+  function makeDefaults(defaultRequest) {
+    return fork().use(function (request, next) {
+      defaults(request, defaultRequest);
+      return next(request);
     });
   }
 
-
-  request.get      = makeMethod('GET');
-  request.head     = makeMethod('HEAD');
-  request.put      = makeMethod('PUT');
-  request.post     = makeMethod('POST');
-  request.del      = makeMethod('DELETE');
-  request.patch    = makeMethod('PATCH');
-  request.wrap     = wrap;
-  request.jar      = jar;
-  request.cookie   = cookie;
-  request.defaults = makeDefaults;
-
-  return request;
+  kwest.defaults = makeDefaults;
+  kwest.fork     = fork;
+  kwest.use      = use;
+  kwest.get      = makeMethod('GET');
+  kwest.head     = makeMethod('HEAD');
+  kwest.put      = makeMethod('PUT');
+  kwest.post     = makeMethod('POST');
+  kwest.del      = makeMethod('DELETE');
+  kwest.patch    = makeMethod('PATCH');
+  return kwest;
 
 }
 
-var promisifiedRequest = Promise.promisify(_request);
-
-var makeRequest = function (options) {
-  return promisifiedRequest(options)
-    .spread(function (response) {
-      return response;
-    });
-};
-
-module.exports = init(makeRequest);
+module.exports = init;

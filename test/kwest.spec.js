@@ -1,4 +1,5 @@
-var kwest   = require('..'),
+var Promise = require('bluebird'),
+    kwest   = require('..'),
     express = require('express'),
     assert  = require('chai').assert;
 
@@ -11,6 +12,19 @@ describe('kwest', function () {
   });
 
 
+  function getBody(stream) {
+    return new Promise(function (resolve, reject) {
+      var body = '';
+      stream.on('data', function (chunk) {
+        body += chunk.toString();
+      });
+      stream.on('error', reject);
+      stream.on('end', function () {
+        resolve(body);
+      });
+    });
+  }
+
 
   it('makes simple request', function (done) {
 
@@ -20,10 +34,14 @@ describe('kwest', function () {
       })
       .listen(3000, function () {
 
-        kwest.get('http://localhost:3000')
+        kwest()
+          .get('http://localhost:3000')
           .then(function (res) {
             assert.propertyVal(res, 'statusCode', 200);
-            assert.propertyVal(res, 'body', 'hello');
+            return getBody(res.data);
+          })
+          .then(function (body) {
+            assert.strictEqual(body, 'hello');
             done();
           })
           .catch(done);
@@ -40,14 +58,19 @@ describe('kwest', function () {
       })
       .listen(3000, function () {
 
-        kwest.defaults({
-          headers: {
-            'x-test': 'hello'
-          }
-        }).get('http://localhost:3000')
+        kwest()
+          .defaults({
+            headers: {
+              'x-test': 'hello'
+            }
+          })
+          .get('http://localhost:3000')
           .then(function (res) {
             assert.propertyVal(res, 'statusCode', 200);
-            assert.propertyVal(res, 'body', 'hello');
+            return getBody(res.data);
+          })
+          .then(function (body) {
+            assert.strictEqual(body, 'hello');
             done();
           })
           .catch(done);
@@ -56,7 +79,7 @@ describe('kwest', function () {
 
   });
 
-  it('wraps a middleware', function (done) {
+  it('should use a middleware', function (done) {
 
     server = express()
       .get('/', function (req, res) {
@@ -64,19 +87,25 @@ describe('kwest', function () {
       })
       .listen(3000, function () {
 
-        kwest.wrap(function (makeRequest, options) {
-          assert.deepPropertyVal(options, 'uri.href', 'http://localhost:3000/');
-          assert.property(options, 'headers');
-          options.headers['x-test'] = 'hello';
-          return makeRequest(options)
-            .then(function (res) {
-              res.body += ' world';
-              return res;
-            });
-        }).get('http://localhost:3000')
+        kwest()
+          .use(function (request, next) {
+            assert.deepPropertyVal(request, 'uri.href', 'http://localhost:3000/');
+            assert.property(request, 'headers');
+            request.setHeader('x-test', 'hello');
+            return next(request)
+              .then(function (res) {
+                res.setHeader('x-test-2', 'world');
+                return res;
+              });
+          })
+          .get('http://localhost:3000')
           .then(function (res) {
             assert.propertyVal(res, 'statusCode', 200);
-            assert.propertyVal(res, 'body', 'hello world');
+            assert.strictEqual(res.getHeader('x-test-2'), 'world');
+            return getBody(res.data);
+          })
+          .then(function (body) {
+            assert.strictEqual(body, 'hello');
             done();
           })
           .catch(done);
