@@ -58,12 +58,11 @@ describe('kwest', function () {
       })
       .listen(3000, function () {
 
-        kwest()
-          .defaults({
-            headers: {
-              'x-test': 'hello'
-            }
-          })
+        kwest({
+          headers: {
+            'x-test': 'hello'
+          }
+        })
           .get('http://localhost:3000')
           .then(function (res) {
             assert.propertyVal(res, 'statusCode', 200);

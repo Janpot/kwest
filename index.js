@@ -1,18 +1,52 @@
 'use strict';
 
 var base     = require('kwest-base'),
+    urlUtil  = require('url'),
     defaults = require('merge-defaults');
 
-function init(initial) {
 
-  var baseKwest = base(initial);
+function isParsedUrl(url) {
+  return url && url.protocol && (url.host || url.hostname);
+}
 
-  function kwest(request) {
-    return baseKwest(request);
+function readUri(options) {
+  if (typeof options === 'string') {
+    return urlUtil.parse(options);
+  } else if (typeof options.uri === 'string') {
+    return urlUtil.parse(options.uri);
+  } else if (isParsedUrl(options.uri)) {
+    return options.uri;
+  }
+  return undefined;
+}
+
+function normalizeOptions(options) {
+  options = options || {};
+  var uri = readUri(options);
+  if (typeof options === 'string') {
+    options = {};
+  }
+  options.uri = uri;
+  return options;
+}
+
+
+function init(defaultOptions, initial) {
+
+  var baseKwest = initial || base();
+
+  function kwest(options) {
+    options = normalizeOptions(options);
+    defaults(options, defaultOptions);
+    return baseKwest(options);
   }
 
-  function fork() {
-    return init(baseKwest);
+  function fork(newDefaultOptions) {
+    if (newDefaultOptions || defaultOptions) {
+      newDefaultOptions = normalizeOptions(newDefaultOptions);
+      defaults(newDefaultOptions, defaultOptions || {});
+    }
+    return init(newDefaultOptions, baseKwest.fork());
   }
 
   function use(middleware) {
@@ -23,18 +57,11 @@ function init(initial) {
   function makeMethod(method) {
     return function (options) {
       options.method = method;
-      return baseKwest(options);
+      return kwest(options);
     };
   }
 
-  function makeDefaults(defaultRequest) {
-    return fork().use(function (request, next) {
-      defaults(request, defaultRequest);
-      return next(request);
-    });
-  }
 
-  kwest.defaults = makeDefaults;
   kwest.fork     = fork;
   kwest.use      = use;
   kwest.get      = makeMethod('GET');
