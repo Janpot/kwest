@@ -12,7 +12,7 @@
   "author": "Jan Potoms",
   "license": "MIT",
   "dependencies": {
-    "kwest-base": "^0.4.0",
+    "kwest-base": "^0.5.0",
     "merge-defaults": "^0.2.1"
   },
   "devDependencies": {
