@@ -1,6 +1,6 @@
 {
   "name": "kwest",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "express for client requests.",
   "main": "index.js",
   "scripts": {
