@@ -1,56 +1,97 @@
 'use strict';
 
-var base     = require('kwest-base'),
-    urlUtil  = require('url'),
-    defaults = require('merge-defaults');
+var kwestBase = require('./kwest-base'),
+    urlUtil   = require('url'),
+    caseless  = require('caseless'),
+    extend    = require('extend'),
+    defaults  = require('merge-defaults');
 
 
-function isParsedUrl(url) {
-  return url && url.protocol && (url.host || url.hostname);
+
+function Request(options) {
+  this._isKwest = true;
+  this.protocol = null;
+  this.hostname = null;
+  this.port     = null;
+  this.path     = null;
+  this.headers  = {};
+  caseless.httpify(this, this.headers);
+
+  if (typeof options === 'string') {
+    this.setUrl(options);
+  } else {
+    this.applyConfig(options);
+  }
 }
 
-function readUri(options) {
-  if (typeof options === 'string') {
-    return urlUtil.parse(options);
-  } else if (typeof options.uri === 'string') {
-    return urlUtil.parse(options.uri);
-  } else if (isParsedUrl(options.uri)) {
-    return options.uri;
-  }
-  return undefined;
-}
 
-function normalizeOptions(options) {
-  options = options || {};
-  var uri = readUri(options);
+
+Request.prototype.applyConfig = function applyConfig(options) {
+  if (!options) return;
+
   if (typeof options === 'string') {
-    options = {};
+    this.setUrl(options);
+    return;
   }
-  options.uri = uri;
-  return options;
+
+  var url = options.url || options.uri;
+
+  if (url) {
+    this.setUrl(options);
+  }
+
+  delete options.url;
+  delete options.uri;
+  extend(true, this, options);
+};
+
+Request.prototype.setUrl = function setUrl(url) {
+  var parsed;
+  if (typeof url === 'string') parsed = urlUtil.parse(url);
+  else parsed = url;
+
+  this.protocol = parsed.protocol || 'http';
+  this.hostname = parsed.hostname || 'localhost';
+  this.port = parsed.port;
+  this.path = parsed.path;
+};
+
+Request.prototype.getUrl = function getUrl() {
+  return urlUtil.format(this);
+};
+
+
+function buildRequest(options, defaultOptions) {
+  var request;
+  if (options._isKwest) {
+    request = options;
+  } else {
+    request = new Request(options);
+  }
+  request.applyConfig(defaultOptions);
+  return request;
 }
 
 
 function init(defaultOptions, initial) {
 
-  var baseKwest = initial || base();
+  var base = initial || kwestBase;
 
   function kwest(options) {
-    options = normalizeOptions(options);
-    defaults(options, defaultOptions);
-    return baseKwest(options);
+    var request = buildRequest(options, defaultOptions);
+    return base(request);
   }
 
-  function fork(newDefaultOptions) {
-    if (newDefaultOptions || defaultOptions) {
-      newDefaultOptions = normalizeOptions(newDefaultOptions);
-      defaults(newDefaultOptions, defaultOptions || {});
-    }
-    return init(newDefaultOptions, baseKwest.fork());
+  function fork(withDefaults) {
+    var newDefaults = extend(true, {}, defaultOptions, withDefaults);
+    return init(newDefaults, base);
   }
 
   function use(middleware) {
-    baseKwest.use(middleware);
+    var oldBase = base;
+    base = function (request) {
+      return middleware(request, oldBase);
+    };
     return kwest;
   }
 
