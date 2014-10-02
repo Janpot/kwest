@@ -40,9 +40,14 @@ Request.prototype.applyConfig = function applyConfig(options) {
     this.setUrl(options);
   }
 
-  delete options.url;
-  delete options.uri;
-  extend(true, this, options);
+  Object.keys(options)
+    .forEach(function (key) {
+      var ignore = key === 'url' || key === 'uri';
+      if (ignore) return;
+      var value = options[key];
+      if (typeof value === 'function') return;
+      this[key] = value;
+    }.bind(this));
 };
 
 Request.prototype.setUrl = function setUrl(url) {
@@ -57,7 +62,13 @@ Request.prototype.setUrl = function setUrl(url) {
 };
 
 Request.prototype.getUrl = function getUrl() {
-  return urlUtil.format(this);
+  var base = urlUtil.format({
+    protocol: this.protocol,
+    hostname: this.hostname,
+    port: this.port
+  });
+  if (this.path) return base + this.path;
+  else return base;
 };
 
 
