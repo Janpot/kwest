@@ -37,7 +37,7 @@ Request.prototype.applyConfig = function applyConfig(options) {
   var url = options.url || options.uri;
 
   if (url) {
-    this.setUrl(options);
+    this.setUrl(url);
   }
 
   Object.keys(options)
@@ -54,8 +54,8 @@ Request.prototype.setUrl = function setUrl(url) {
   if (typeof url === 'string') parsed = urlUtil.parse(url);
   else parsed = url;
 
-  this.protocol = parsed.protocol || 'http';
-  this.hostname = parsed.hostname || 'localhost';
+  this.protocol = parsed.protocol;
+  this.hostname = parsed.hostname;
   this.port = parsed.port;
   this.path = parsed.path;
 };
