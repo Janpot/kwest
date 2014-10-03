@@ -45,7 +45,7 @@ Request.prototype.applyConfig = function applyConfig(options) {
       var ignore = key === 'url' || key === 'uri';
       if (ignore) return;
       var value = options[key];
-      this[key] = value;
+      this[key] = extend(this[key], value);
     }.bind(this));
 };
 
