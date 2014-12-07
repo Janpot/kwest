@@ -88,7 +88,7 @@ describe('kwest', function () {
 
         kwest()
           .use(function (request, next) {
-            assert.strictEqual(request.getUrl(), 'http://localhost:3000');
+            assert.strictEqual(request.getUrl(), 'http://localhost:3000/');
             assert.property(request, 'headers');
             request.setHeader('x-test', 'hello');
             return next(request)
